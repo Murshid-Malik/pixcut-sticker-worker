@@ -1,0 +1,1 @@
+# pixcut-sticker-worker
