@@ -12,7 +12,11 @@ RUN git clone https://github.com/set-soft/ComfyUI-RemoveBackground_SET /comfyui/
  && /opt/venv/bin/python -m pip install -c /tmp/sticker-constraints.txt -r /comfyui/custom_nodes/ComfyUI-RemoveBackground_SET/requirements.txt
 
 COPY download_models.py /sticker/download_models.py
-RUN /opt/venv/bin/python /sticker/download_models.py
+# GHCR limits individual layers to 10 GB; keep each model in its own layer.
+RUN /opt/venv/bin/python /sticker/download_models.py --model diffusion_models/flux-2-klein-4b-fp8.safetensors
+RUN /opt/venv/bin/python /sticker/download_models.py --model text_encoders/qwen_3_4b.safetensors
+RUN /opt/venv/bin/python /sticker/download_models.py --model vae/flux2-vae.safetensors
+RUN /opt/venv/bin/python /sticker/download_models.py --model RemBG/General-Lite.safetensors
 COPY six-stickers-api.json check_server.py verify_build.py /sticker/
 RUN /opt/venv/bin/python /sticker/verify_build.py
 

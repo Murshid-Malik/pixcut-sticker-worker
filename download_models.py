@@ -1,5 +1,6 @@
 """Download public model weights at build time; validate safetensors structure."""
 from pathlib import Path
+import argparse
 import urllib.request
 from safetensors import safe_open
 
@@ -9,7 +10,11 @@ MODELS = {
     'vae/flux2-vae.safetensors': 'Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors',
     'RemBG/General-Lite.safetensors': 'ZhengPeng7/BiRefNet_lite/resolve/main/model.safetensors',
 }
-for relative, remote in MODELS.items():
+parser = argparse.ArgumentParser()
+parser.add_argument('--model', choices=list(MODELS), help='Download one model into its own Docker layer')
+args = parser.parse_args()
+selected = {args.model: MODELS[args.model]} if args.model else MODELS
+for relative, remote in selected.items():
     path = Path('/comfyui/models') / relative
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix('.part')
