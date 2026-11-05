@@ -1,0 +1,1982 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "portrait.png"
+    },
+    "_meta": {
+      "title": "INPUT — upload one portrait"
+    }
+  },
+  "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "upscale_method": "lanczos",
+      "width": 768,
+      "height": 1024,
+      "crop": "center",
+      "image": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Reference portrait · 768 × 1024 centre crop"
+    }
+  },
+  "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "flux-2-klein-4b-fp8.safetensors",
+      "weight_dtype": "default"
+    },
+    "_meta": {
+      "title": "FLUX.2 klein 4B · DISTILLED"
+    }
+  },
+  "4": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_3_4b.safetensors",
+      "type": "flux2",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Qwen 3 4B encoder · flux2"
+    }
+  },
+  "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "flux2-vae.safetensors"
+    },
+    "_meta": {
+      "title": "FLUX.2 VAE"
+    }
+  },
+  "6": {
+    "class_type": "VAEEncode",
+    "inputs": {
+      "pixels": [
+        "2",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Shared reference latent"
+    }
+  },
+  "7": {
+    "class_type": "AutoDownloadBiRefNetModel_SET",
+    "inputs": {
+      "model_name": "General Lite (170 MiB)",
+      "device": "AUTO",
+      "dtype": "AUTO"
+    },
+    "_meta": {
+      "title": "ADNOC BiRefNet General Lite"
+    }
+  },
+  "8": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "_meta": {
+      "title": "Euler"
+    }
+  },
+  "9": {
+    "class_type": "Flux2Scheduler",
+    "inputs": {
+      "steps": 4,
+      "width": 768,
+      "height": 1024
+    },
+    "_meta": {
+      "title": "Distilled · 4 steps"
+    }
+  },
+  "10": {
+    "class_type": "EmptyFlux2LatentImage",
+    "inputs": {
+      "width": 768,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "One portrait per style"
+    }
+  },
+  "100": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "Edit the reference photograph into a charming chibi illustration with a slightly oversized head, rounded features, clean linework and soft colours. Keep the same recognizable person, facial identity, hairstyle, skin tone and clothing. A single centred head-and-shoulders portrait, fully contained with generous empty space around the person. Plain uniform light grey background, no shadows on the background. No text, lettering, logos, props, extra people, detached decorations or drawn sticker border. Preserve the person’s expression. ",
+      "clip": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Chibi · editable style prompt"
+    }
+  },
+  "101": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "100",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Zero negative conditioning"
+    }
+  },
+  "102": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "100",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Positive + SAME person reference"
+    }
+  },
+  "103": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "101",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Negative + reference"
+    }
+  },
+  "104": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "cfg": 1.0,
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "102",
+        0
+      ],
+      "negative": [
+        "103",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Distilled CFG = 1"
+    }
+  },
+  "105": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 2026110501
+    },
+    "_meta": {
+      "title": "Fixed seed for repeatable comparison"
+    }
+  },
+  "106": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "105",
+        0
+      ],
+      "guider": [
+        "104",
+        0
+      ],
+      "sampler": [
+        "8",
+        0
+      ],
+      "sigmas": [
+        "9",
+        0
+      ],
+      "latent_image": [
+        "10",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Generate Chibi"
+    }
+  },
+  "107": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "106",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Chibi RGB image"
+    }
+  },
+  "120": {
+    "class_type": "RembgByBiRefNet_SET",
+    "inputs": {
+      "batch_size": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "images": [
+        "107",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Remove background · 01_chibi"
+    }
+  },
+  "121": {
+    "class_type": "SplitImageWithAlpha",
+    "inputs": {
+      "image": [
+        "120",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Extract RGB + inverse alpha"
+    }
+  },
+  "122": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "121",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Foreground opacity (1 = person)"
+    }
+  },
+  "123": {
+    "class_type": "ImagePadForOutpaint",
+    "inputs": {
+      "left": 32,
+      "top": 32,
+      "right": 32,
+      "bottom": 32,
+      "feathering": 0,
+      "image": [
+        "121",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "32 px padding — use dimensions only"
+    }
+  },
+  "124": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": [
+        "123",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Padded output dimensions"
+    }
+  },
+  "125": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 0.0,
+      "width": [
+        "124",
+        0
+      ],
+      "height": [
+        "124",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Empty padded opacity"
+    }
+  },
+  "126": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "operation": "add",
+      "destination": [
+        "125",
+        0
+      ],
+      "source": [
+        "122",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Place portrait opacity at 32,32"
+    }
+  },
+  "127": {
+    "class_type": "GrowMask",
+    "inputs": {
+      "expand": 16,
+      "tapered_corners": true,
+      "mask": [
+        "126",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "White border width · 16 px"
+    }
+  },
+  "128": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "127",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Inverse expanded opacity for Join"
+    }
+  },
+  "129": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": [
+        "124",
+        0
+      ],
+      "height": [
+        "124",
+        1
+      ],
+      "batch_size": 1,
+      "color": 16777215
+    },
+    "_meta": {
+      "title": "Pure white underlay"
+    }
+  },
+  "130": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "resize_source": false,
+      "destination": [
+        "129",
+        0
+      ],
+      "source": [
+        "121",
+        0
+      ],
+      "mask": [
+        "122",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Portrait over white (RGB)"
+    }
+  },
+  "131": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "130",
+        0
+      ],
+      "alpha": [
+        "128",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "RGBA sticker: white edge + transparent outside"
+    }
+  },
+  "132": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "sticker_options/01_chibi",
+      "images": [
+        "131",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "OUTPUT 01_chibi · transparent PNG"
+    }
+  },
+  "200": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "Edit the reference photograph into a colourful comic-book portrait with confident ink outlines, clear cel shading and subtle halftone texture. Keep the same recognizable person, facial identity, hairstyle, skin tone and clothing. A single centred head-and-shoulders portrait, fully contained with generous empty space around the person. Plain uniform light grey background, no shadows on the background. No text, lettering, logos, props, extra people, detached decorations or drawn sticker border. Preserve the person’s expression. ",
+      "clip": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Comic book · editable style prompt"
+    }
+  },
+  "201": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "200",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Zero negative conditioning"
+    }
+  },
+  "202": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "200",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Positive + SAME person reference"
+    }
+  },
+  "203": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "201",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Negative + reference"
+    }
+  },
+  "204": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "cfg": 1.0,
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "202",
+        0
+      ],
+      "negative": [
+        "203",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Distilled CFG = 1"
+    }
+  },
+  "205": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 2026110502
+    },
+    "_meta": {
+      "title": "Fixed seed for repeatable comparison"
+    }
+  },
+  "206": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "205",
+        0
+      ],
+      "guider": [
+        "204",
+        0
+      ],
+      "sampler": [
+        "8",
+        0
+      ],
+      "sigmas": [
+        "9",
+        0
+      ],
+      "latent_image": [
+        "10",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Generate Comic book"
+    }
+  },
+  "207": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "206",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Comic book RGB image"
+    }
+  },
+  "220": {
+    "class_type": "RembgByBiRefNet_SET",
+    "inputs": {
+      "batch_size": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "images": [
+        "207",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Remove background · 02_comic"
+    }
+  },
+  "221": {
+    "class_type": "SplitImageWithAlpha",
+    "inputs": {
+      "image": [
+        "220",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Extract RGB + inverse alpha"
+    }
+  },
+  "222": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "221",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Foreground opacity (1 = person)"
+    }
+  },
+  "223": {
+    "class_type": "ImagePadForOutpaint",
+    "inputs": {
+      "left": 32,
+      "top": 32,
+      "right": 32,
+      "bottom": 32,
+      "feathering": 0,
+      "image": [
+        "221",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "32 px padding — use dimensions only"
+    }
+  },
+  "224": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": [
+        "223",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Padded output dimensions"
+    }
+  },
+  "225": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 0.0,
+      "width": [
+        "224",
+        0
+      ],
+      "height": [
+        "224",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Empty padded opacity"
+    }
+  },
+  "226": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "operation": "add",
+      "destination": [
+        "225",
+        0
+      ],
+      "source": [
+        "222",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Place portrait opacity at 32,32"
+    }
+  },
+  "227": {
+    "class_type": "GrowMask",
+    "inputs": {
+      "expand": 16,
+      "tapered_corners": true,
+      "mask": [
+        "226",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "White border width · 16 px"
+    }
+  },
+  "228": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "227",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Inverse expanded opacity for Join"
+    }
+  },
+  "229": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": [
+        "224",
+        0
+      ],
+      "height": [
+        "224",
+        1
+      ],
+      "batch_size": 1,
+      "color": 16777215
+    },
+    "_meta": {
+      "title": "Pure white underlay"
+    }
+  },
+  "230": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "resize_source": false,
+      "destination": [
+        "229",
+        0
+      ],
+      "source": [
+        "221",
+        0
+      ],
+      "mask": [
+        "222",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Portrait over white (RGB)"
+    }
+  },
+  "231": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "230",
+        0
+      ],
+      "alpha": [
+        "228",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "RGBA sticker: white edge + transparent outside"
+    }
+  },
+  "232": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "sticker_options/02_comic",
+      "images": [
+        "231",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "OUTPUT 02_comic · transparent PNG"
+    }
+  },
+  "300": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "Edit the reference photograph into a handcrafted 3D clay figurine portrait with rounded forms, matte clay texture and soft studio lighting. Keep the same recognizable person, facial identity, hairstyle, skin tone and clothing. A single centred head-and-shoulders portrait, fully contained with generous empty space around the person. Plain uniform light grey background, no shadows on the background. No text, lettering, logos, props, extra people, detached decorations or drawn sticker border. Preserve the person’s expression. ",
+      "clip": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "3D clay · editable style prompt"
+    }
+  },
+  "301": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "300",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Zero negative conditioning"
+    }
+  },
+  "302": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "300",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Positive + SAME person reference"
+    }
+  },
+  "303": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "301",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Negative + reference"
+    }
+  },
+  "304": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "cfg": 1.0,
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "302",
+        0
+      ],
+      "negative": [
+        "303",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Distilled CFG = 1"
+    }
+  },
+  "305": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 2026110503
+    },
+    "_meta": {
+      "title": "Fixed seed for repeatable comparison"
+    }
+  },
+  "306": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "305",
+        0
+      ],
+      "guider": [
+        "304",
+        0
+      ],
+      "sampler": [
+        "8",
+        0
+      ],
+      "sigmas": [
+        "9",
+        0
+      ],
+      "latent_image": [
+        "10",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Generate 3D clay"
+    }
+  },
+  "307": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "306",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "3D clay RGB image"
+    }
+  },
+  "320": {
+    "class_type": "RembgByBiRefNet_SET",
+    "inputs": {
+      "batch_size": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "images": [
+        "307",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Remove background · 03_clay"
+    }
+  },
+  "321": {
+    "class_type": "SplitImageWithAlpha",
+    "inputs": {
+      "image": [
+        "320",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Extract RGB + inverse alpha"
+    }
+  },
+  "322": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "321",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Foreground opacity (1 = person)"
+    }
+  },
+  "323": {
+    "class_type": "ImagePadForOutpaint",
+    "inputs": {
+      "left": 32,
+      "top": 32,
+      "right": 32,
+      "bottom": 32,
+      "feathering": 0,
+      "image": [
+        "321",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "32 px padding — use dimensions only"
+    }
+  },
+  "324": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": [
+        "323",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Padded output dimensions"
+    }
+  },
+  "325": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 0.0,
+      "width": [
+        "324",
+        0
+      ],
+      "height": [
+        "324",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Empty padded opacity"
+    }
+  },
+  "326": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "operation": "add",
+      "destination": [
+        "325",
+        0
+      ],
+      "source": [
+        "322",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Place portrait opacity at 32,32"
+    }
+  },
+  "327": {
+    "class_type": "GrowMask",
+    "inputs": {
+      "expand": 16,
+      "tapered_corners": true,
+      "mask": [
+        "326",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "White border width · 16 px"
+    }
+  },
+  "328": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "327",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Inverse expanded opacity for Join"
+    }
+  },
+  "329": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": [
+        "324",
+        0
+      ],
+      "height": [
+        "324",
+        1
+      ],
+      "batch_size": 1,
+      "color": 16777215
+    },
+    "_meta": {
+      "title": "Pure white underlay"
+    }
+  },
+  "330": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "resize_source": false,
+      "destination": [
+        "329",
+        0
+      ],
+      "source": [
+        "321",
+        0
+      ],
+      "mask": [
+        "322",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Portrait over white (RGB)"
+    }
+  },
+  "331": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "330",
+        0
+      ],
+      "alpha": [
+        "328",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "RGBA sticker: white edge + transparent outside"
+    }
+  },
+  "332": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "sticker_options/03_clay",
+      "images": [
+        "331",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "OUTPUT 03_clay · transparent PNG"
+    }
+  },
+  "400": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "Edit the reference photograph into a polished watercolour portrait illustration with gentle colour washes inside a clean well-defined outer silhouette. Keep the same recognizable person, facial identity, hairstyle, skin tone and clothing. A single centred head-and-shoulders portrait, fully contained with generous empty space around the person. Plain uniform light grey background, no shadows on the background. No text, lettering, logos, props, extra people, detached decorations or drawn sticker border. Preserve the person’s expression. ",
+      "clip": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Watercolour · editable style prompt"
+    }
+  },
+  "401": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "400",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Zero negative conditioning"
+    }
+  },
+  "402": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "400",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Positive + SAME person reference"
+    }
+  },
+  "403": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "401",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Negative + reference"
+    }
+  },
+  "404": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "cfg": 1.0,
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "402",
+        0
+      ],
+      "negative": [
+        "403",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Distilled CFG = 1"
+    }
+  },
+  "405": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 2026110504
+    },
+    "_meta": {
+      "title": "Fixed seed for repeatable comparison"
+    }
+  },
+  "406": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "405",
+        0
+      ],
+      "guider": [
+        "404",
+        0
+      ],
+      "sampler": [
+        "8",
+        0
+      ],
+      "sigmas": [
+        "9",
+        0
+      ],
+      "latent_image": [
+        "10",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Generate Watercolour"
+    }
+  },
+  "407": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "406",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Watercolour RGB image"
+    }
+  },
+  "420": {
+    "class_type": "RembgByBiRefNet_SET",
+    "inputs": {
+      "batch_size": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "images": [
+        "407",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Remove background · 04_watercolour"
+    }
+  },
+  "421": {
+    "class_type": "SplitImageWithAlpha",
+    "inputs": {
+      "image": [
+        "420",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Extract RGB + inverse alpha"
+    }
+  },
+  "422": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "421",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Foreground opacity (1 = person)"
+    }
+  },
+  "423": {
+    "class_type": "ImagePadForOutpaint",
+    "inputs": {
+      "left": 32,
+      "top": 32,
+      "right": 32,
+      "bottom": 32,
+      "feathering": 0,
+      "image": [
+        "421",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "32 px padding — use dimensions only"
+    }
+  },
+  "424": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": [
+        "423",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Padded output dimensions"
+    }
+  },
+  "425": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 0.0,
+      "width": [
+        "424",
+        0
+      ],
+      "height": [
+        "424",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Empty padded opacity"
+    }
+  },
+  "426": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "operation": "add",
+      "destination": [
+        "425",
+        0
+      ],
+      "source": [
+        "422",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Place portrait opacity at 32,32"
+    }
+  },
+  "427": {
+    "class_type": "GrowMask",
+    "inputs": {
+      "expand": 16,
+      "tapered_corners": true,
+      "mask": [
+        "426",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "White border width · 16 px"
+    }
+  },
+  "428": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "427",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Inverse expanded opacity for Join"
+    }
+  },
+  "429": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": [
+        "424",
+        0
+      ],
+      "height": [
+        "424",
+        1
+      ],
+      "batch_size": 1,
+      "color": 16777215
+    },
+    "_meta": {
+      "title": "Pure white underlay"
+    }
+  },
+  "430": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "resize_source": false,
+      "destination": [
+        "429",
+        0
+      ],
+      "source": [
+        "421",
+        0
+      ],
+      "mask": [
+        "422",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Portrait over white (RGB)"
+    }
+  },
+  "431": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "430",
+        0
+      ],
+      "alpha": [
+        "428",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "RGBA sticker: white edge + transparent outside"
+    }
+  },
+  "432": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "sticker_options/04_watercolour",
+      "images": [
+        "431",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "OUTPUT 04_watercolour · transparent PNG"
+    }
+  },
+  "500": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "Edit the reference photograph into a modern flat-vector portrait with simplified shapes, strong clean contours and a limited harmonious colour palette. Keep the same recognizable person, facial identity, hairstyle, skin tone and clothing. A single centred head-and-shoulders portrait, fully contained with generous empty space around the person. Plain uniform light grey background, no shadows on the background. No text, lettering, logos, props, extra people, detached decorations or drawn sticker border. Preserve the person’s expression. ",
+      "clip": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Flat vector · editable style prompt"
+    }
+  },
+  "501": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "500",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Zero negative conditioning"
+    }
+  },
+  "502": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "500",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Positive + SAME person reference"
+    }
+  },
+  "503": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "501",
+        0
+      ],
+      "latent": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Negative + reference"
+    }
+  },
+  "504": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "cfg": 1.0,
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "502",
+        0
+      ],
+      "negative": [
+        "503",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Distilled CFG = 1"
+    }
+  },
+  "505": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 2026110505
+    },
+    "_meta": {
+      "title": "Fixed seed for repeatable comparison"
+    }
+  },
+  "506": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "505",
+        0
+      ],
+      "guider": [
+        "504",
+        0
+      ],
+      "sampler": [
+        "8",
+        0
+      ],
+      "sigmas": [
+        "9",
+        0
+      ],
+      "latent_image": [
+        "10",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Generate Flat vector"
+    }
+  },
+  "507": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "506",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Flat vector RGB image"
+    }
+  },
+  "520": {
+    "class_type": "RembgByBiRefNet_SET",
+    "inputs": {
+      "batch_size": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "images": [
+        "507",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Remove background · 05_vector"
+    }
+  },
+  "521": {
+    "class_type": "SplitImageWithAlpha",
+    "inputs": {
+      "image": [
+        "520",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Extract RGB + inverse alpha"
+    }
+  },
+  "522": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "521",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Foreground opacity (1 = person)"
+    }
+  },
+  "523": {
+    "class_type": "ImagePadForOutpaint",
+    "inputs": {
+      "left": 32,
+      "top": 32,
+      "right": 32,
+      "bottom": 32,
+      "feathering": 0,
+      "image": [
+        "521",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "32 px padding — use dimensions only"
+    }
+  },
+  "524": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": [
+        "523",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Padded output dimensions"
+    }
+  },
+  "525": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 0.0,
+      "width": [
+        "524",
+        0
+      ],
+      "height": [
+        "524",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Empty padded opacity"
+    }
+  },
+  "526": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "operation": "add",
+      "destination": [
+        "525",
+        0
+      ],
+      "source": [
+        "522",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Place portrait opacity at 32,32"
+    }
+  },
+  "527": {
+    "class_type": "GrowMask",
+    "inputs": {
+      "expand": 16,
+      "tapered_corners": true,
+      "mask": [
+        "526",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "White border width · 16 px"
+    }
+  },
+  "528": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "527",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Inverse expanded opacity for Join"
+    }
+  },
+  "529": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": [
+        "524",
+        0
+      ],
+      "height": [
+        "524",
+        1
+      ],
+      "batch_size": 1,
+      "color": 16777215
+    },
+    "_meta": {
+      "title": "Pure white underlay"
+    }
+  },
+  "530": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "resize_source": false,
+      "destination": [
+        "529",
+        0
+      ],
+      "source": [
+        "521",
+        0
+      ],
+      "mask": [
+        "522",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Portrait over white (RGB)"
+    }
+  },
+  "531": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "530",
+        0
+      ],
+      "alpha": [
+        "528",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "RGBA sticker: white edge + transparent outside"
+    }
+  },
+  "532": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "sticker_options/05_vector",
+      "images": [
+        "531",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "OUTPUT 05_vector · transparent PNG"
+    }
+  },
+  "620": {
+    "class_type": "RembgByBiRefNet_SET",
+    "inputs": {
+      "batch_size": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "images": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Remove background · 06_original_photo"
+    }
+  },
+  "621": {
+    "class_type": "SplitImageWithAlpha",
+    "inputs": {
+      "image": [
+        "620",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Extract RGB + inverse alpha"
+    }
+  },
+  "622": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "621",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Foreground opacity (1 = person)"
+    }
+  },
+  "623": {
+    "class_type": "ImagePadForOutpaint",
+    "inputs": {
+      "left": 32,
+      "top": 32,
+      "right": 32,
+      "bottom": 32,
+      "feathering": 0,
+      "image": [
+        "621",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "32 px padding — use dimensions only"
+    }
+  },
+  "624": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": [
+        "623",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Padded output dimensions"
+    }
+  },
+  "625": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 0.0,
+      "width": [
+        "624",
+        0
+      ],
+      "height": [
+        "624",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Empty padded opacity"
+    }
+  },
+  "626": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "operation": "add",
+      "destination": [
+        "625",
+        0
+      ],
+      "source": [
+        "622",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Place portrait opacity at 32,32"
+    }
+  },
+  "627": {
+    "class_type": "GrowMask",
+    "inputs": {
+      "expand": 16,
+      "tapered_corners": true,
+      "mask": [
+        "626",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "White border width · 16 px"
+    }
+  },
+  "628": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "627",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Inverse expanded opacity for Join"
+    }
+  },
+  "629": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": [
+        "624",
+        0
+      ],
+      "height": [
+        "624",
+        1
+      ],
+      "batch_size": 1,
+      "color": 16777215
+    },
+    "_meta": {
+      "title": "Pure white underlay"
+    }
+  },
+  "630": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+      "x": 32,
+      "y": 32,
+      "resize_source": false,
+      "destination": [
+        "629",
+        0
+      ],
+      "source": [
+        "621",
+        0
+      ],
+      "mask": [
+        "622",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Portrait over white (RGB)"
+    }
+  },
+  "631": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "630",
+        0
+      ],
+      "alpha": [
+        "628",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "RGBA sticker: white edge + transparent outside"
+    }
+  },
+  "632": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "sticker_options/06_original_photo",
+      "images": [
+        "631",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "OUTPUT 06_original_photo · transparent PNG"
+    }
+  }
+}
